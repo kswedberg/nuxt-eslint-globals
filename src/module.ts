@@ -5,8 +5,6 @@
 import {basename, resolve, relative} from 'path';
 import {fileURLToPath} from 'url';
 import {addTemplate, defineNuxtModule, resolvePath} from '@nuxt/kit';
-import defu from 'defu';
-
 
 const getName = (autoImp) => {
   return autoImp.as ? autoImp.as.toString() : autoImp.name.toString();
@@ -92,7 +90,7 @@ export default defineNuxtModule<ModuleOptions>({
 
     // Add custom globals from module options
     const config = nuxt.options.runtimeConfig;
-    const aieConfig = defu(config.eslintGlobals, options);
+    const aieConfig = Object.assign({}, options, config.eslintGlobals);
 
     if (aieConfig.custom?.length) {
       autoImports.custom = aieConfig.custom;
