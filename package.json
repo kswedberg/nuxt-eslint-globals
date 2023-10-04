@@ -1,8 +1,8 @@
 {
-  "name": "my-module",
+  "name": "nuxt-eslint-globals",
   "version": "1.0.0",
-  "description": "My new Nuxt module",
-  "repository": "your-org/my-module",
+  "description": "Adds an eslint globals file for Nuxt auto-imports",
+  "repository": "kswedberg/nuxt-eslint-globals",
   "license": "MIT",
   "type": "module",
   "exports": {
