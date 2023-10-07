@@ -29,16 +29,11 @@ export default defineNuxtModule<ModuleOptions>({
   },
 
   setup(options, nuxt) {
-    // const resolver = createResolver(import.meta.url);
-
-    // Do not add the extension since the `.ts` will be transpiled to `.mjs` after `npm run prepack`
-    // addPlugin(resolver.resolve('./runtime/plugin'));
 
     const autoImports = {
       // global imports
       global: [
         '$fetch',
-        'useCloneDeep',
         'defineNuxtConfig',
         'definePageMeta',
         // 'defineI18nConfig',
@@ -59,7 +54,7 @@ export default defineNuxtModule<ModuleOptions>({
       autoImports.custom = aieConfig.custom;
     }
 
-    const {getName, getPaths, setupContents, processAutoImports} = getUtils(modulePath, aieConfig);
+    const {getName, getPaths, setupContents} = getUtils(modulePath, aieConfig);
 
     nuxt.hook('imports:context', async(context) => {
       const imports = await context.getImports();
@@ -87,10 +82,8 @@ export default defineNuxtModule<ModuleOptions>({
     });
 
     nuxt.hook('modules:done', async() => {
-      const imports = processAutoImports(autoImports);
-
       const paths = await getPaths(nuxt);
-      const getContents = setupContents(paths.module, imports);
+      const getContents = setupContents(paths.module, autoImports);
       const templateOptions = {
         filename: paths.filename,
         getContents,
