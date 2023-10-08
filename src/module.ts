@@ -3,9 +3,12 @@
  * https://github.com/nuxt/eslint-plugin-nuxt/issues/173
  */
 import {resolve, relative} from 'path';
+import {readFile} from 'fs/promises';
 import {fileURLToPath} from 'url';
 import {addTemplate, defineNuxtModule} from '@nuxt/kit';
 import {getUtils} from './utils.mjs';
+import {resolveModuleExportNames, findExportNames} from 'mlly';
+
 
 const modulePath = fileURLToPath(import.meta.url);
 
@@ -38,13 +41,11 @@ export default defineNuxtModule<ModuleOptions>({
         'definePageMeta',
         // 'defineI18nConfig',
       ],
-      // TODO: Figure out a way to programmatically get nitro & h3 imports; remove hard-coded ones
-      nitro: ['defineCachedFunction', 'defineCachedEventHandler', 'cachedFunction', 'cachedEventHandler', 'useRuntimeConfig', 'useStorage', 'useNitroApp', 'defineNitroPlugin', 'nitroPlugin', 'defineRenderHandler', 'getRouteRules', 'useAppConfig', 'useEvent'],
-      h3: ['appendCorsHeaders', 'appendCorsPreflightHeaders', 'appendHeader', 'appendHeaders', 'appendResponseHeader', 'appendResponseHeaders', 'assertMethod', 'callNodeListener', 'clearResponseHeaders', 'clearSession', 'createApp', 'createAppEventHandler', 'createError', 'createEvent', 'createRouter', 'defaultContentType', 'defineEventHandler', 'defineLazyEventHandler', 'defineNodeListener', 'defineNodeMiddleware', 'defineRequestMiddleware', 'defineResponseMiddleware', 'deleteCookie', 'dynamicEventHandler', 'eventHandler', 'fetchWithEvent', 'fromNodeMiddleware', 'fromPlainHandler', 'fromWebHandler', 'getCookie', 'getHeader', 'getHeaders', 'getMethod', 'getProxyRequestHeaders', 'getQuery', 'getRequestHeader', 'getRequestHeaders', 'getRequestHost', 'getRequestIP', 'getRequestPath', 'getRequestProtocol', 'getRequestURL', 'getRequestWebStream', 'getResponseHeader', 'getResponseHeaders', 'getResponseStatus', 'getResponseStatusText', 'getRouterParam', 'getRouterParams', 'getSession', 'getValidatedQuery', 'handleCacheHeaders', 'handleCors', 'isCorsOriginAllowed', 'isError', 'isEvent', 'isEventHandler', 'isMethod', 'isPreflightRequest', 'isStream', 'isWebResponse', 'lazyEventHandler', 'parseCookies', 'promisifyNodeListener', 'proxyRequest', 'readBody', 'readFormData', 'readMultipartFormData', 'readRawBody', 'readValidatedBody', 'removeResponseHeader', 'sanitizeStatusCode', 'sanitizeStatusMessage', 'sealSession', 'send', 'sendError', 'sendNoContent', 'sendProxy', 'sendRedirect', 'sendStream', 'sendWebResponse', 'serveStatic', 'setCookie', 'setHeader', 'setHeaders', 'setResponseHeader', 'setResponseHeaders', 'setResponseStatus', 'splitCookiesString', 'toEventHandler', 'toNodeListener', 'toPlainHandler', 'toWebHandler', 'toWebRequest', 'unsealSession', 'updateSession', 'useBase', 'useSession', 'writeEarlyHints'],
+      h3: [],
+      nitro: [],
       custom: [],
       composables: [],
     };
-
 
     // Add custom globals from module options
     const config = nuxt.options.runtimeConfig;
@@ -57,21 +58,38 @@ export default defineNuxtModule<ModuleOptions>({
     const {getName, getPaths, setupContents} = getUtils(modulePath, aieConfig);
 
     nuxt.hook('imports:context', async(context) => {
+      // Get all exposed auto-imports
       const imports = await context.getImports();
+
+      // Also, need to get server-side auto-imports:
+      // h3 & nitro, as well as custom imports from server/utils
+      const h3 = await resolveModuleExportNames('h3');
+      const nitro = [];
+
+      try {
+        const nitroFile = await readFile(resolve(process.cwd(), 'node_modules/nitropack/dist/runtime/index.mjs'), 'utf-8');
+
+        nitro.push(...findExportNames(nitroFile));
+      } catch (err) {
+        console.log(err);
+      }
+
       const utilsDir = resolve(nuxt.options.serverDir, 'utils');
       const relativeDir = relative(nuxt.options.rootDir, utilsDir);
       const serverUtils = await context.scanImportsFromDir([utilsDir]);
       const serverImports = serverUtils.map((imp) => {
-        imp.from = relativeDir;
-
-        return imp;
+        return Object.assign(imp, {from: relativeDir});
       });
 
       imports.push(...serverImports);
-
       imports.forEach((autoImport) => {
         autoImports[autoImport.from] = autoImports[autoImport.from] || [];
         autoImports[autoImport.from].push(getName(autoImport));
+      });
+
+      Object.assign(autoImports, {
+        h3: h3.filter((name) => !/^[A-Z]/.test(name)),
+        nitro,
       });
     });
 
