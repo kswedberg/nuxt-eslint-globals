@@ -2760,9 +2760,9 @@ escape-string-regexp@^5.0.0:
   integrity sha512-/veY75JbMK4j1yjvuUxuVsiS/hr/4iHs9FTT6cgTexxdE0Ly/glccBAkloH/DofkjRbZU3bnoj38mOmhkZ0lHw==
 
 eslint-config-kswedberg@^5.4.0:
-  version "5.4.0"
-  resolved "https://registry.yarnpkg.com/eslint-config-kswedberg/-/eslint-config-kswedberg-5.4.0.tgz#5dad8e4a3fbb9f2f7f1c8731ef610cd4c00006ee"
-  integrity sha512-L2ncxV5/tK7k4qRRz7xvSqBxxMQ0HV/2USweQMheLrZuV+BUPdug4ALQHkA6IubxpYy47Mz4gh1HNcHG4rDA5g==
+  version "5.4.1"
+  resolved "https://registry.yarnpkg.com/eslint-config-kswedberg/-/eslint-config-kswedberg-5.4.1.tgz#33e060d5a2dbc739929e615815b0004a97ce6f85"
+  integrity sha512-35K2ValVG9fg1qWHEtRaYbIOf+dE8VbAXtvLxpVXejFo+pCSAnHSag/SS/pkX9e2vG3Vu4gAmWtm6W4GpFvUjQ==
 
 eslint-plugin-vue@^9.17.0:
   version "9.17.0"
