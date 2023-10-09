@@ -17,6 +17,14 @@
   "files": [
     "dist"
   ],
+  "keywords": [
+    "nuxt",
+    "nuxt3",
+    "eslint",
+    "globals",
+    "auto-imports",
+    "nuxt-module"
+  ],
   "scripts": {
     "prepack": "nuxt-module-build build",
     "dev": "nuxi dev playground",
