@@ -1,6 +1,6 @@
 {
   "name": "nuxt-eslint-globals",
-  "version": "1.0.5",
+  "version": "2.0.0",
   "description": "Adds an eslint globals file for Nuxt auto-imports",
   "repository": "kswedberg/nuxt-eslint-globals",
   "license": "MIT",
