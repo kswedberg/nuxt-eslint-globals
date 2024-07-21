@@ -93,6 +93,12 @@ export const getUtils = (modulePath, options) => {
       return Object.assign(imp, {from: relativeDir});
     });
 
+    if (options.debug) {
+      console.log('utilsDir', utilsDir);
+      console.log('relativeDir', relativeDir);
+      console.log('serverImports', serverImports);
+    }
+
     return serverImports;
   };
 

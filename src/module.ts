@@ -19,6 +19,7 @@ export interface ModuleOptions {
   flat: boolean;
   outputDir: string | null;
   outputType: 'cjs' | 'es' | 'mjs' | 'ts' | 'json';
+  debug: boolean;
 }
 
 export default defineNuxtModule<ModuleOptions>({
@@ -33,6 +34,7 @@ export default defineNuxtModule<ModuleOptions>({
     flat: true,
     outputDir: null,
     outputType: 'mjs',
+    debug: false,
   },
 
   setup(options, nuxt) {
@@ -83,7 +85,6 @@ export default defineNuxtModule<ModuleOptions>({
 
       const serverImports = await getServerImports(nuxt, context);
 
-      console.log(serverImports);
       imports.push(...serverImports);
 
       for (const autoImport of imports) {
