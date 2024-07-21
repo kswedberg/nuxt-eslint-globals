@@ -5,9 +5,9 @@ import {readFileSync, rmSync} from 'node:fs';
 import {join} from 'node:path';
 
 describe('globals', async() => {
-  const rootDir = fileURLToPath(new URL('./fixtures/basic', import.meta.url));
+  const rootDir = fileURLToPath(new URL('./fixtures/legacy', import.meta.url));
   const outputDir = join(rootDir, 'gitignore');
-  const outputFile = join(outputDir, '.eslint.globals.cjs');
+  const outputFile = join(outputDir, '.eslint.globals.mjs');
 
 
   await setup({
@@ -37,4 +37,9 @@ describe('globals', async() => {
     expect(text).toContain('useTestMe:');
   });
 
+  it('adds globals from server utils directory', () => {
+    const text = readFileSync(outputFile, 'utf-8');
+
+    expect(text).toContain('testServerUtil:');
+  });
 });
