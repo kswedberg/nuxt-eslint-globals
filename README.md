@@ -56,9 +56,11 @@ Once the module creates the ESLint globals file, you can reference it in your `.
 
 ## Options
 
-The module accepts three optional settings:
+The module accepts these optional settings:
 
-- **`custom`**: an array of strings representing globals you want to add to the `.eslint.globals.cjs` file in addition to the ones the module adds automatically
+- **`flat`** (new!): Default is `true`. Whether to use eslint's new flat config.
+- **`custom`**: an array of strings representing globals you want to add to the `.eslint.globals.cjs` file in addition to the ones the module adds automatically.
+- **`exclude`** (new!): Default is `[]`. Possible values: `['vue', 'nuxt', 'h3', 'nitro']`. An array of strings pertaining to categories of functions. This can be nice if other eslint-config packages are including some of these globals already and you don't want to duplicate efforts.
 - **`outputType`**: (one of `'cjs'`, `'es'`, `'ts'`, or `'json'`. Default is `'cjs'`.) A string representing the type of module you would like to produce. This will affect the file's extension as well as the type of export within the file (of course, `'json'` will just produce the JSON string).
 - **`outputDir`**: the directory, relative to the project's root, where you want the `.eslint.globals.cjs` file to be located. If none is provided it will go in the build directory.
 
