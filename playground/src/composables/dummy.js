@@ -1,5 +1,5 @@
 export const useDummy = () => {
   return {
-    dummy: 'dummy'
-  }
+    dummy: 'dummy',
+  };
 };

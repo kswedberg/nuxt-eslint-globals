@@ -62,6 +62,19 @@ export default defineNuxtModule<ModuleOptions>({
     }
 
     const {getName, getPaths, setupContents, getServerImports} = getUtils(modulePath, aieConfig);
+    const excludes = aieConfig.exclude;
+    const excludeComposablesIndex = excludes.indexOf('composables');
+
+    // Need to remove 'composables' from excludes array,
+    // because it could trigger a false positive for something like '#app/composables/…
+    if (excludeComposablesIndex > -1) {
+      try {
+        excludes.splice(excludeComposablesIndex, 1);
+      } catch (error) {
+        console.log('typeof excludes??', typeof excludes);
+      }
+
+    }
 
     nuxt.hook('imports:context', async(context) => {
       // Get all exposed auto-imports
@@ -69,10 +82,10 @@ export default defineNuxtModule<ModuleOptions>({
 
       // Also, need to get server-side auto-imports:
       // h3 & nitro, as well as custom imports from server/utils
-      const h3 = aieConfig.exclude.includes('h3') ? [] : await resolveModuleExportNames('h3');
+      const h3 = excludes.includes('h3') ? [] : await resolveModuleExportNames('h3');
       const nitro = [];
 
-      if (!aieConfig.exclude.includes('nitro')) {
+      if (!excludes.includes('nitro')) {
         try {
           const nitroFile = await readFile(resolve(process.cwd(), 'node_modules/nitropack/dist/runtime/index.mjs'), 'utf-8');
 
@@ -82,14 +95,15 @@ export default defineNuxtModule<ModuleOptions>({
         }
       }
 
+      if (!excludes.includes('server-utils')) {
+        const serverImports = await getServerImports(nuxt, context);
 
-      const serverImports = await getServerImports(nuxt, context);
-
-      imports.push(...serverImports);
+        imports.push(...serverImports);
+      }
 
       for (const autoImport of imports) {
         const from = autoImport.from;
-        const exclude = aieConfig.exclude.some((ex) => from.includes(ex));
+        const exclude = excludes.some((ex) => from.includes(ex));
 
         if (!exclude) {
           autoImports[from] = autoImports[from] || [];
@@ -101,13 +115,14 @@ export default defineNuxtModule<ModuleOptions>({
         h3: h3.filter((name) => !/^[A-Z]/.test(name)),
         nitro,
       });
-
     });
 
     nuxt.hook('imports:extend', (composableImport) => {
-      autoImports.composables = composableImport.map((autoImport) => {
-        return getName(autoImport);
-      });
+      if (excludeComposablesIndex === -1) {
+        autoImports.composables = composableImport.map((autoImport) => {
+          return getName(autoImport);
+        });
+      }
     });
 
     nuxt.hook('modules:done', async() => {
