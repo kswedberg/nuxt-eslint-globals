@@ -2,7 +2,7 @@
  * This module is based on comments in the following GitHub issue:
  * https://github.com/nuxt/eslint-plugin-nuxt/issues/173
  */
-import {resolve, relative} from 'path';
+import {resolve} from 'path';
 import {readFile} from 'fs/promises';
 import {fileURLToPath} from 'url';
 import {addTemplate, defineNuxtModule} from '@nuxt/kit';
@@ -15,6 +15,8 @@ const modulePath = fileURLToPath(import.meta.url);
 // Module options TypeScript interface definition
 export interface ModuleOptions {
   custom: string[];
+  exclude: string[];
+  flat: boolean;
   outputDir: string | null;
   outputType: 'cjs' | 'es' | 'mjs' | 'ts' | 'json';
 }
@@ -27,8 +29,10 @@ export default defineNuxtModule<ModuleOptions>({
   // Default configuration options of the Nuxt module
   defaults: {
     custom: [],
+    exclude: [],
+    flat: true,
     outputDir: null,
-    outputType: 'cjs',
+    outputType: 'mjs',
   },
 
   setup(options, nuxt) {
@@ -55,7 +59,7 @@ export default defineNuxtModule<ModuleOptions>({
       autoImports.custom = aieConfig.custom;
     }
 
-    const {getName, getPaths, setupContents} = getUtils(modulePath, aieConfig);
+    const {getName, getPaths, setupContents, getServerImports} = getUtils(modulePath, aieConfig);
 
     nuxt.hook('imports:context', async(context) => {
       // Get all exposed auto-imports
@@ -63,34 +67,40 @@ export default defineNuxtModule<ModuleOptions>({
 
       // Also, need to get server-side auto-imports:
       // h3 & nitro, as well as custom imports from server/utils
-      const h3 = await resolveModuleExportNames('h3');
+      const h3 = aieConfig.exclude.includes('h3') ? [] : await resolveModuleExportNames('h3');
       const nitro = [];
 
-      try {
-        const nitroFile = await readFile(resolve(process.cwd(), 'node_modules/nitropack/dist/runtime/index.mjs'), 'utf-8');
+      if (!aieConfig.exclude.includes('nitro')) {
+        try {
+          const nitroFile = await readFile(resolve(process.cwd(), 'node_modules/nitropack/dist/runtime/index.mjs'), 'utf-8');
 
-        nitro.push(...findExportNames(nitroFile));
-      } catch (err) {
-        console.log(err);
+          nitro.push(...findExportNames(nitroFile));
+        } catch (err) {
+          console.log(err);
+        }
       }
 
-      const utilsDir = resolve(nuxt.options.serverDir, 'utils');
-      const relativeDir = relative(nuxt.options.rootDir, utilsDir);
-      const serverUtils = await context.scanImportsFromDir([utilsDir]);
-      const serverImports = serverUtils.map((imp) => {
-        return Object.assign(imp, {from: relativeDir});
-      });
 
+      const serverImports = await getServerImports(nuxt, context);
+
+      console.log(serverImports);
       imports.push(...serverImports);
-      imports.forEach((autoImport) => {
-        autoImports[autoImport.from] = autoImports[autoImport.from] || [];
-        autoImports[autoImport.from].push(getName(autoImport));
-      });
+
+      for (const autoImport of imports) {
+        const from = autoImport.from;
+        const exclude = aieConfig.exclude.some((ex) => from.includes(ex));
+
+        if (!exclude) {
+          autoImports[from] = autoImports[from] || [];
+          autoImports[from].push(getName(autoImport));
+        }
+      }
 
       Object.assign(autoImports, {
         h3: h3.filter((name) => !/^[A-Z]/.test(name)),
         nitro,
       });
+
     });
 
     nuxt.hook('imports:extend', (composableImport) => {
