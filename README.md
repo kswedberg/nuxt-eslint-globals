@@ -38,18 +38,30 @@ export default defineNuxtConfig({
 })
 ```
 
-That's it! The next time you run the `dev` command, the module will create a file named `.eslint.globals.cjs` in your project's build directory (`.nuxt`).
+That's it! The next time you run the `dev` command, the module will create a file named `.eslint.globals.mjs` in your project's build directory (`.nuxt`).
 
-All auto-imported functions from Vue, Nuxt, h3, Nitro, and third-party modules will be included. Additionally, exports from your project's `components`, `composables`, and `server/utils` directories will be added.
+All auto-imported functions from Vue, Nuxt, h3, Nitro, and third-party modules will be included — unless you explicitly exclude them using the `exclude` option. Additionally, exports from your project's `components`, `composables`, and `server/utils` directories will be added.
 
 ## Usage
 
-Once the module creates the ESLint globals file, you can reference it in your `.eslintrc`:
+Once the module creates the ESLint globals file, you can reference it in your `eslint.config.*` file:
+
+```js
+import nuxtGlobals from '.nuxt/.eslint.globals.mjs';
+
+export default [
+  nuxtGlobals,
+  // ...other configs
+];
+```
+
+Or, if you're still using the legacy eslint config type, you can reference the globals in your  `.eslintrc` (See below for setting the `flat` option to `false`):
+
 
 ```json
 {
   "extends": [
-    ".nuxt/.eslint.globals.cjs"
+    ".nuxt/.eslint.globals.mjs"
   ]
 }
 ```
@@ -61,14 +73,14 @@ The module accepts these optional settings:
 - **`flat`** (new!): Default is `true`. Whether to use eslint's new flat config.
 - **`custom`**: an array of strings representing globals you want to add to the `.eslint.globals.cjs` file in addition to the ones the module adds automatically.
 - **`exclude`** (new!): Default is `[]`. Possible values: `['vue', 'nuxt', 'h3', 'nitro']`. An array of strings pertaining to categories of functions. This can be nice if other eslint-config packages are including some of these globals already and you don't want to duplicate efforts.
-- **`outputType`**: (one of `'cjs'`, `'es'`, `'ts'`, or `'json'`. Default is `'cjs'`.) A string representing the type of module you would like to produce. This will affect the file's extension as well as the type of export within the file (of course, `'json'` will just produce the JSON string).
+- **`outputType`**: (one of `'cjs'`, `'es'`, `'ts'`, or `'json'`. Default is **`'mjs'`**.) A string representing the type of module you would like to produce. This will affect the file's extension as well as the type of export within the file (of course, `'json'` will just produce the JSON string).
 - **`outputDir`**: the directory, relative to the project's root, where you want the `.eslint.globals.cjs` file to be located. If none is provided it will go in the build directory.
 
 You can add options in `nuxt.config` either by using array format for the module registration:
 
 ```js
 modules: [
-  ['nuxt-eslint-globals', {outputType: 'json', custom: ['fooo', 'barrrr']}]
+  ['nuxt-eslint-globals', {outputType: 'json', flat: false, custom: ['fooo', 'barrrr']}]
 ]
 ```
 
