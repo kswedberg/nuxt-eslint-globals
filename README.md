@@ -1,4 +1,4 @@
-# ESLint Globals
+# Nuxt ESLint Globals
 
 [![npm version][npm-version-src]][npm-version-href]
 [![npm downloads][npm-downloads-src]][npm-downloads-href]
@@ -7,7 +7,7 @@
 
 Nuxt module that creates an eslint globals file for Nuxt auto-imports
 
-All auto-imported functions from Vue, Nuxt, h3, Nitro, and third-party modules will be included. Additionally, exports from your project's `components`, `composables`, and `server/utils` directories will be added.
+By default, all auto-imported functions from Vue, Nuxt, h3, Nitro, and third-party modules will be included, along with exports from your project's `components`, `composables`, and `server/utils` directories.
 
 <!-- - [✨ &nbsp;Release Notes](/CHANGELOG.md) -->
 <!-- - [🏀 Online playground](https://stackblitz.com/github/kswedberg/nuxt-eslint-globals?file=playground%2Fapp.vue) -->
