@@ -2,12 +2,10 @@
  * This module is based on comments in the following GitHub issue:
  * https://github.com/nuxt/eslint-plugin-nuxt/issues/173
  */
-import {resolve} from 'path';
-import {readFile} from 'fs/promises';
 import {fileURLToPath} from 'url';
 import {addTemplate, defineNuxtModule} from '@nuxt/kit';
 import {getUtils} from './utils.mjs';
-import {resolveModuleExportNames, findExportNames} from 'mlly';
+import {resolveModuleExportNames} from 'mlly';
 
 
 const modulePath = fileURLToPath(import.meta.url);
@@ -43,7 +41,6 @@ export default defineNuxtModule<ModuleOptions>({
       // global imports
       global: [
         '$fetch',
-        'defineNitroPlugin',
         'defineNuxtConfig',
         'definePageMeta',
         // 'defineI18nConfig',
@@ -62,7 +59,7 @@ export default defineNuxtModule<ModuleOptions>({
       autoImports.custom = aieConfig.custom;
     }
 
-    const {getName, getPaths, setupContents, getServerImports} = getUtils(modulePath, aieConfig);
+    const {getName, getPaths, setupContents, getNitroImports, getServerImports} = getUtils(modulePath, aieConfig);
     const excludes = aieConfig.exclude;
     const excludeComposablesIndex = excludes.indexOf('composables');
 
@@ -84,17 +81,7 @@ export default defineNuxtModule<ModuleOptions>({
       // Also, need to get server-side auto-imports:
       // h3 & nitro, as well as custom imports from server/utils
       const h3 = excludes.includes('h3') ? [] : await resolveModuleExportNames('h3');
-      const nitro = [];
-
-      if (!excludes.includes('nitro')) {
-        try {
-          const nitroFile = await readFile(resolve(process.cwd(), 'node_modules/nitropack/dist/runtime/index.mjs'), 'utf-8');
-
-          nitro.push(...findExportNames(nitroFile));
-        } catch (err) {
-          console.log(err);
-        }
-      }
+      const nitro = excludes.includes('nitro') ? [] : await getNitroImports();
 
       if (!excludes.includes('server-utils')) {
         const serverImports = await getServerImports(nuxt, context);
@@ -114,7 +101,7 @@ export default defineNuxtModule<ModuleOptions>({
 
       Object.assign(autoImports, {
         h3: h3.filter((name) => !/^[A-Z]/.test(name)),
-        nitro,
+        nitro: nitro.filter((name) => name !== 'opts'),
       });
     });
 

@@ -1,7 +1,8 @@
 // @ts-check
-
+import {readFile} from 'fs/promises';
 import {basename, resolve, relative} from 'path';
 import {resolvePath} from '@nuxt/kit';
+import {findExportNames} from 'mlly';
 
 /**
  *
@@ -32,6 +33,33 @@ export const getUtils = (modulePath, options) => {
     };
 
     return () => JSON.stringify(output, null, 2);
+  };
+
+  /**
+   * @function getNitroImports
+   * @returns {Promise<Array<string>>} Promise resolving to an array of imports from node_modules/nitropack/…
+   */
+  const getNitroImports = async() => {
+    const nitro = [];
+    // Files to scan:
+    const files = [
+      'node_modules/nitropack/dist/runtime/index.mjs',
+      'node_modules/nitropack/dist/runtime/cache.mjs',
+      'node_modules/nitropack/dist/runtime/plugin.mjs',
+    ];
+
+    try {
+      const fileContents = files.map((file) => readFile(resolve(process.cwd(), file), 'utf-8'));
+      const nitroFiles = await Promise.all(fileContents);
+
+      for (const nitroFile of nitroFiles) {
+        nitro.push(...findExportNames(nitroFile));
+      }
+    } catch (err) {
+      console.log(err);
+    }
+
+    return nitro;
   };
 
   /**
@@ -193,6 +221,7 @@ ${imports},
     getName,
     getPaths,
     setupContents,
+    getNitroImports,
     getServerImports,
   };
 };
