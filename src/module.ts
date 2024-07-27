@@ -43,6 +43,7 @@ export default defineNuxtModule<ModuleOptions>({
       // global imports
       global: [
         '$fetch',
+        'defineNitroPlugin',
         'defineNuxtConfig',
         'definePageMeta',
         // 'defineI18nConfig',
