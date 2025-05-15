@@ -1,8 +1,12 @@
 // @ts-check
 import {readFile} from 'fs/promises';
-import {basename, resolve, relative} from 'path';
-import {resolvePath} from '@nuxt/kit';
+import {basename, resolve, relative, isAbsolute, join} from 'path';
+import {resolvePath, useLogger} from '@nuxt/kit';
 import {findExportNames} from 'mlly';
+import fs from 'fs';
+import {createRequire} from 'module';
+
+const logger = useLogger('nuxt:esLint-globals');
 
 /**
  *
@@ -43,13 +47,19 @@ export const getUtils = (modulePath, options) => {
     const nitro = [];
     // Files to scan:
     const files = [
-      'node_modules/nitropack/dist/runtime/index.mjs',
-      'node_modules/nitropack/dist/runtime/cache.mjs',
-      'node_modules/nitropack/dist/runtime/plugin.mjs',
+      'dist/runtime/index.mjs',
+      'dist/runtime/cache.mjs',
+      'dist/runtime/plugin.mjs',
     ];
 
     try {
-      const fileContents = files.map((file) => readFile(resolve(process.cwd(), file), 'utf-8'));
+      const require = createRequire(import.meta.url);
+      const lookupPaths = require.resolve.paths('nitropack').map((p) => join(p, 'nitropack'));
+      const nitropackPath = lookupPaths.find((p) => fs.existsSync(p));
+
+      logger.debug(`Found nitropack in ${relative(process.cwd(), nitropackPath)}`);
+
+      const fileContents = files.map((file) => readFile(resolve(nitropackPath, file), 'utf-8'));
       const nitroFiles = await Promise.all(fileContents);
 
       for (const nitroFile of nitroFiles) {
@@ -152,7 +162,7 @@ export const getUtils = (modulePath, options) => {
     const module = await getModulePath();
     const output = basename(nuxt.options.buildDir);
     const full = resolve(output, filename);
-    const display = full.replace(appDir, '');
+    const display = relative(process.cwd(), full);
 
     /**
      * @type {Paths}
@@ -161,7 +171,11 @@ export const getUtils = (modulePath, options) => {
 
     if (options.outputDir) {
       paths.dst = resolve(nuxt.options.rootDir, options.outputDir, filename);
-      paths.display = paths.dst;
+      if (isAbsolute(options.outputDir)) {
+        paths.display = paths.dst;
+      } else {
+        paths.display = relative(process.cwd(), paths.dst);
+      }
     }
 
     return paths;
