@@ -3,10 +3,11 @@
  * https://github.com/nuxt/eslint-plugin-nuxt/issues/173
  */
 import {fileURLToPath} from 'url';
-import {addTemplate, defineNuxtModule} from '@nuxt/kit';
+import {addTemplate, defineNuxtModule, useLogger} from '@nuxt/kit';
 import {getUtils} from './utils.mjs';
 import {resolveModuleExportNames} from 'mlly';
 
+const logger = useLogger("nuxt:esLint-globals");
 
 const modulePath = fileURLToPath(import.meta.url);
 
@@ -125,7 +126,7 @@ export default defineNuxtModule<ModuleOptions>({
 
       addTemplate(templateOptions);
 
-      console.log(`\nESLint globals file generated at ${paths.display}\n`);
+      logger.success(`ESLint globals file generated at ${paths.display}`);
     });
   },
 });
